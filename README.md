@@ -129,7 +129,7 @@ You can read about [getting
 started](https://docs.julialang.org/en/stable/manual/getting-started/)
 in the manual.
 
-## Uninstalling Julia
+### Uninstalling Julia
 
 Julia does not install anything outside the directory it was cloned
 into. Julia can be completely uninstalled by deleting this
