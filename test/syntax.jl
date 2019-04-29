@@ -630,12 +630,10 @@ let ex = :(A15838.@f(1, 2)), __source__ = LineNumberNode(@__LINE__, Symbol(@__FI
         false
     catch ex
         ex
-    end::LoadError
-    @test nometh.file === string(__source__.file)
-    @test nometh.line === __source__.line
-    e = nometh.error::MethodError
-    @test e.f === getfield(A15838, Symbol("@f"))
-    @test e.args === (__source__, @__MODULE__, 1, 2)
+    end
+    @test nometh isa MethodError
+    @test nometh.f === getfield(A15838, Symbol("@f"))
+    @test nometh.args === (__source__, @__MODULE__, 1, 2)
 end
 
 # issue 10046
@@ -1454,8 +1452,7 @@ try
     include_string(@__MODULE__, """f26873."a" """)
     @test false
 catch e
-    @test e isa LoadError
-    @test e.error isa MethodError
+    @test e isa MethodError
 end
 
 @test Meta.lower(@__MODULE__, :(if true; break; end for i = 1:1)) == Expr(:error, "break or continue outside loop")
@@ -1750,8 +1747,8 @@ end
 @test Meta.isexpr(Meta.parse("1, "), :incomplete)
 @test Meta.isexpr(Meta.parse("1,\n"), :incomplete)
 @test Meta.isexpr(Meta.parse("1, \n"), :incomplete)
-@test_throws LoadError include_string(@__MODULE__, "1,")
-@test_throws LoadError include_string(@__MODULE__, "1,\n")
+@test_throws ErrorException("syntax: incomplete: premature end of input") include_string(@__MODULE__, "1,")
+@test_throws ErrorException("syntax: incomplete: premature end of input") include_string(@__MODULE__, "1,\n")
 
 # issue #30062
 let er = Meta.lower(@__MODULE__, quote if false end, b+=2 end)

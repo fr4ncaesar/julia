@@ -306,6 +306,7 @@ AssertionError() = AssertionError("")
 
 abstract type WrappedException <: Exception end
 
+# Usage of LoadError is deprecated in src. It's left here for compatibility.
 struct LoadError <: WrappedException
     file::AbstractString
     line::Int

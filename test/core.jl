@@ -985,8 +985,7 @@ let didthrow =
             """)
         false
     catch ex
-        @test isa(ex, LoadError)
-        @test isa(ex.error, InitError)
+        @test ex isa InitError
         true
     end
     @test didthrow
@@ -1071,17 +1070,15 @@ let
     @test_throws BoundsError(z, 0) getfield(z, 0)
     @test_throws BoundsError(z, 3) getfield(z, 3)
 
-    strct = LoadError("yofile", 0, "bad")
-    @test nfields(strct) == 3 # sanity test
+    strct = InitError(:yomod, "bad")
+    @test nfields(strct) == 2 # sanity test
     @test_throws BoundsError(strct, 10) getfield(strct, 10)
-    @test_throws ErrorException("setfield! immutable struct of type LoadError cannot be changed") setfield!(strct, 0, "")
-    @test_throws ErrorException("setfield! immutable struct of type LoadError cannot be changed") setfield!(strct, 4, "")
-    @test_throws ErrorException("setfield! immutable struct of type LoadError cannot be changed") setfield!(strct, :line, 0)
-    @test strct.file == "yofile"
-    @test strct.line === 0
+    @test_throws ErrorException("setfield! immutable struct of type InitError cannot be changed") setfield!(strct, 0, "")
+    @test_throws ErrorException("setfield! immutable struct of type InitError cannot be changed") setfield!(strct, 4, "")
+    @test_throws ErrorException("setfield! immutable struct of type InitError cannot be changed") setfield!(strct, :mod, :yomod2)
+    @test strct.mod == :yomod
     @test strct.error == "bad"
-    @test getfield(strct, 1) == "yofile"
-    @test getfield(strct, 2) === 0
+    @test getfield(strct, 1) == :yomod
     @test getfield(strct, 3) == "bad"
 
     mstrct = TestMutable("melm", 1, nothing)
@@ -2034,8 +2031,8 @@ test5536(a::Union{Real, AbstractArray}) = "Non-splatting"
     include_string(@__MODULE__, "1 + #= #= blah =# =# 2") ==
     include_string(@__MODULE__, "1 + #= #= #= nested =# =# =# 2") ==
     include_string(@__MODULE__, "1 + #= \0 =# 2")
-@test_throws LoadError include_string(@__MODULE__, "#=")
-@test_throws LoadError include_string(@__MODULE__, "#= #= #= =# =# =")
+@test_throws ErrorException("syntax: incomplete: unterminated multi-line comment #= ... =#") include_string(@__MODULE__, "#=")
+@test_throws ErrorException("syntax: incomplete: unterminated multi-line comment #= ... =#") include_string(@__MODULE__, "#= #= #= =# =# =")
 
 # issue #6142
 import Base: +
@@ -3869,12 +3866,9 @@ end
 @test @m8846(a, 1) === (:a, 1)
 let nometh = try; @eval @m8846(a, b, c); false; catch ex; ex; end
     __source__ = LineNumberNode(@__LINE__() -  1, Symbol(@__FILE__))
-    nometh::LoadError
-    @test nometh.file === string(__source__.file)
-    @test nometh.line === __source__.line
-    e = nometh.error::MethodError
-    @test e.f === getfield(@__MODULE__, Symbol("@m8846"))
-    @test e.args === (__source__, @__MODULE__, :a, :b, :c)
+    @test nometh isa MethodError
+    @test nometh.f === getfield(@__MODULE__, Symbol("@m8846"))
+    @test nometh.args === (__source__, @__MODULE__, :a, :b, :c)
  end
 
 # a simple case of parametric dispatch with unions
